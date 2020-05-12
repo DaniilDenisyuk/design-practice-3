@@ -112,7 +112,6 @@ func min(serversPool []server, condition func(a, b server) bool) (int, error) {
 
 func main() {
 	flag.Parse()
-	// TODO: Використовуйте дані про стан сервреа, щоб підтримувати список тих серверів, яким можна відправляти ззапит.
 	for index, _ := range serversPool {
 		server := &serversPool[index]
 		go func() {
