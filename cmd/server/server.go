@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/roman-mazur/design-practice-3-template/httptools"
-	"github.com/roman-mazur/design-practice-3-template/signal"
+	"github.com/DaniilDenisyuk/design-practice-3/httptools"
+	"github.com/DaniilDenisyuk/design-practice-3/signal"
 )
 
 var port = flag.Int("port", 8080, "server port")
@@ -32,6 +32,7 @@ func main() {
 	})
 
 	report := make(Report)
+	os.Setenv("CONF_RESPONSE_DELAY_SEC", "1")
 
 	h.HandleFunc("/api/v1/some-data", func(rw http.ResponseWriter, r *http.Request) {
 		respDelayString := os.Getenv(confResponseDelaySec)

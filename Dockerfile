@@ -2,12 +2,10 @@ FROM golang:1.14 as build
 
 RUN apt-get update && apt-get install -y ninja-build
 
-# TODO: Змініть на власну реалізацію системи збірки
-RUN go get -u github.com/roman-mazur/bood/cmd/bood
+RUN go get -u github.com/DaniilDenisyuk/design-practice-2/build/cmd/bood
 
 WORKDIR /go/src/practice-3
 COPY . .
-
 RUN CGO_ENABLED=0 bood
 
 # ==== Final image ====

@@ -1,0 +1,10 @@
+go_binary {
+  name: "integration-tests",
+  pkg: "github.com/DaniilDenisyuk/design-practice-3/integration",
+  testPkg: "github.com/DaniilDenisyuk/design-practice-3/integration",
+  srcs: [
+    "httptools/**/*.go",
+    "signal/**/*.go",
+    "cmd/lb/*.go"
+  ]
+}
