@@ -1,10 +1,8 @@
 language: go
 
 go:
-  - 1.14
-
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+  - "1.14"
+services:
+  - docker
 script:
   - docker-compose -f docker-compose.yaml -f docker-compose.test.yaml up --exit-code-from test
