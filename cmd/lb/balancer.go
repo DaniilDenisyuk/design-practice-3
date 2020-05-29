@@ -24,7 +24,7 @@ var (
 
 type server struct {
 	url       string
-	connCnt   uint64
+	connCnt   int64
 	isHealthy bool
 }
 
@@ -66,7 +66,7 @@ func forward(dst *server, rw http.ResponseWriter, r *http.Request) error {
 	fwdRequest.URL.Host = url
 	fwdRequest.URL.Scheme = scheme()
 	fwdRequest.Host = url
-	atomic.AddUint64(&dst.connCnt, 1)
+	atomic.AddInt64(&dst.connCnt, 1)
 	resp, err := http.DefaultClient.Do(fwdRequest)
 	if err == nil {
 		for k, values := range resp.Header {
@@ -84,12 +84,12 @@ func forward(dst *server, rw http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			log.Printf("Failed to write response: %s", err)
 		}
-		atomic.AddUint64(&dst.connCnt, -1)
+		atomic.AddInt64(&dst.connCnt, -1)
 		return nil
 	} else {
 		log.Printf("Failed to get response from %s: %s", dst.url, err)
 		rw.WriteHeader(http.StatusServiceUnavailable)
-		atomic.AddUint64(&dst.connCnt, -1)
+		atomic.AddInt64(&dst.connCnt, -1)
 		return err
 	}
 }
