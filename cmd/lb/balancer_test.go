@@ -1,75 +1,94 @@
 package main
 
 import (
+	"container/heap"
 	"github.com/stretchr/testify/assert"
+	"sync/atomic"
 	"testing"
 )
 
-func TestBalancerEmpty(t *testing.T) {
-	testServersPool := []server{
-		{"server1:8080", 0, true},
-		{"server2:8080", 0, true},
-		{"server3:8080", 0, true},
-	}
+func TestBalancerVeryComplex1(t *testing.T) {
 
-	minIndex, err := min(testServersPool, func(a, b server) bool { return a.connCnt < b.connCnt })
-	assert.Nil(t, err)
-	assert.Equal(t, minIndex, 0, "wrong server selected")
+	testServersPool := PriorityQueue{
+		{"server1:8080", 0, true, 1},
+		{"server2:8080", 0, true, 2},
+		{"server3:8080", 0, true, 3},
+	}
+	heap.Init(&testServersPool)
+	_, minServer := min(&testServersPool)
+	atomic.AddInt64(&minServer.priority, 17)
+	_, minServer = min(&testServersPool)
+	atomic.AddInt64(&minServer.priority, 15)
+	atomic.AddInt64(&minServer.priority, -5)
+	_, minServer = min(&testServersPool)
+	atomic.AddInt64(&minServer.priority, 12)
+	_, minServer = min(&testServersPool)
+	atomic.AddInt64(&minServer.priority, 12)
+	_, minServer = min(&testServersPool)
+	atomic.AddInt64(&minServer.priority, 1)
+	_, minServer = min(&testServersPool)
+
+	// This is example of trouble
+	println(testServersPool[0].priority, testServersPool[1].priority, testServersPool[2].priority)
+	assert.Equal(t, minServer.priority, int64(17), "wrong server selected")
 }
+func TestBalancerVeryComplex2(t *testing.T) {
 
-func TestBalancerSimple1(t *testing.T) {
-	testServersPool := []server{
-		{"server1:8080", 2, true},
-		{"server2:8080", 2, true},
-		{"server3:8080", 1, true},
+	testServersPool := PriorityQueue{
+		{"server1:8080", 0, true, 1},
+		{"server2:8080", 0, true, 2},
+		{"server3:8080", 0, true, 3},
 	}
+	heap.Init(&testServersPool)
+	_, minServer := min(&testServersPool)
+	atomic.AddInt64(&minServer.priority, 17)
+	_, minServer = min(&testServersPool)
+	atomic.AddInt64(&minServer.priority, 15)
+	atomic.AddInt64(&minServer.priority, -5)
+	_, minServer = min(&testServersPool)
+	atomic.AddInt64(&minServer.priority, 12)
+	_, minServer = min(&testServersPool)
+	atomic.AddInt64(&minServer.priority, 12)
+	_, minServer = min(&testServersPool)
+	atomic.AddInt64(&minServer.priority, -10)
+	_, minServer = min(&testServersPool)
+	_, minServer = min(&testServersPool)
 
-	minIndex, err := min(testServersPool, func(a, b server) bool { return a.connCnt < b.connCnt })
-	assert.Nil(t, err)
-	assert.Equal(t, minIndex, 2, "wrong server selected")
-}
-
-func TestBalancerSimple2(t *testing.T) {
-	testServersPool := []server{
-		{"server1:8080", 6, true},
-		{"server2:8080", 5, true},
-		{"server3:8080", 5, true},
-	}
-
-	minIndex, err := min(testServersPool, func(a, b server) bool { return a.connCnt < b.connCnt })
-	assert.Nil(t, err)
-	assert.Equal(t, minIndex, 1, "wrong server selected")
-}
-
-func TestBalancerComplex1(t *testing.T) {
-	testServersPool := []server{
-		{"server1:8080", 6, true},
-		{"server2:8080", 0, false},
-		{"server3:8080", 5, true},
-	}
-
-	minIndex, err := min(testServersPool, func(a, b server) bool { return a.connCnt < b.connCnt })
-	assert.Nil(t, err)
-	assert.Equal(t, minIndex, 2, "wrong server selected")
-}
-
-func TestBalancerComplex2(t *testing.T) {
-	testServersPool := []server{
-		{"server1:8080", 0, false},
-		{"server2:8080", 0, false},
-		{"server3:8080", 85, true},
-	}
-	minIndex, err := min(testServersPool, func(a, b server) bool { return a.connCnt < b.connCnt })
-	assert.Equal(t, err, nil, err)
-	assert.Equal(t, minIndex, 2, "wrong server selected")
+	// This is example of trouble
+	println(testServersPool[0].priority, testServersPool[1].priority, testServersPool[2].priority)
+	assert.Equal(t, minServer.priority, int64(2), "wrong server selected")
 }
 
 func TestBalancerError(t *testing.T) {
-	testServersPool := []server{
-		{"server1:8080", 0, false},
-		{"server2:8080", 0, false},
-		{"server3:8080", 0, false},
+	testServersPool := PriorityQueue{
+		{"server1:8080", 0, false, 1},
+		{"server2:8080", 0, false, 2},
+		{"server3:8080", 0, false, 3},
 	}
-	_, err := min(testServersPool, func(a, b server) bool { return a.connCnt < b.connCnt })
-	assert.NotNil(t, err, "error test not passed")
+	heap.Init(&testServersPool)
+	err, _ := min(&testServersPool)
+	assert.Error(t, err, testServersPool.Len())
+}
+
+func TestBalancerSimple(t *testing.T) {
+	testServersPool := PriorityQueue{
+		{"server1:8080", 1, true, 1},
+		{"server2:8080", 2, true, 2},
+		{"server3:8080", 2, true, 3},
+	}
+	heap.Init(&testServersPool)
+	_, minServer := min(&testServersPool)
+	assert.Equal(t, minServer.priority, int64(1), "wrong server selected")
+}
+
+func TestBalancerComplex(t *testing.T) {
+	testServersPool := PriorityQueue{
+		{"server1:8080", 0, false, 1},
+		{"server2:8080", 0, false, 2},
+		{"server3:8080", 150, true, 3},
+	}
+	heap.Init(&testServersPool)
+	_, minServer := min(&testServersPool)
+	assert.Equal(t, minServer.url, "server3:8080", "wrong server selected")
+	assert.Equal(t, testServersPool.Len(), 1, "wrong server selected")
 }
