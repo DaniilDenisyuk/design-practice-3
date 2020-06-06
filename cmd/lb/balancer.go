@@ -47,20 +47,23 @@ func (pq *PriorityQueue) Push(x interface{}) {
 	*pq = append(*pq, iServer)
 }
 
-func (pq *PriorityQueue) Pop() interface{} {
+func (pq *PriorityQueue) Shift() {
 	old := *pq
 	n := len(old)
-	iServer := old[n-1]
-	return iServer
+	item := old[0]
+	old[0] = nil    // avoid memory leak
+	item.index = -1 // for safety
+	*pq = old[1:n]
 }
 
-func (pq *PriorityQueue) Remove() {
+func (pq *PriorityQueue) Pop() interface{} {
 	old := *pq
 	n := len(old)
 	item := old[n-1]
 	old[n-1] = nil  // avoid memory leak
 	item.index = -1 // for safety
 	*pq = old[0 : n-1]
+	return item
 }
 
 // update modifies the priority and value of an Item in the queue.
@@ -148,9 +151,9 @@ func min(pq *PriorityQueue) (error, *Server) {
 		return errors.New("no servers in queue"), nil
 	}
 	var err error = nil
-	server := heap.Pop(pq).(*Server)
+	server := (*pq)[0]
 	if !server.isHealthy {
-		pq.Remove()
+		pq.Shift()
 		err, server = min(pq)
 	}
 	return err, server
