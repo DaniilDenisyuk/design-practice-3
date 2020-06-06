@@ -185,8 +185,10 @@ func main() {
 			return
 		}
 		atomic.AddInt64(&server.priority, 1)
+		heap.Fix(&serversPool, server.index)
 		forward(server.url, rw, r)
 		atomic.AddInt64(&server.priority, -1)
+		heap.Fix(&serversPool, server.index)
 	}))
 
 	log.Println("Starting load balancer...")
